@@ -1,0 +1,203 @@
+/*Timers
+* Lab_3.c
+* James Hill-Mechatronics Lab3-2025
+* Created: 1/28/2025 3:04:58 PM
+* Author : jmh02
+*/
+
+#include <avr/io.h>  //Including any necessary libraries
+#define FREQ_CLK 1000000  //Defining necessary clock frequency 1000000
+
+//Declaring all necessary functions
+void wait(volatile int multiple);
+void SequenceA();
+void SequenceB();
+void SequenceC();
+void SequenceD();
+void SwitchCheck();
+
+
+/*===========================================================
+* M A I N F U N C T I O N
+*=========================================================== */
+
+int main(void){
+	
+	//Setting required I/O pins for the LEDs
+	DDRC=0b00000011;  //Setting pins 0 and 1 on C as outputs, all else are inputs
+	
+	//Setting required I/O pins for the SWITCH
+	DDRD=0b00000000;   //Setting all pins on D as inputs. The switch will be connected to PD2
+
+	//Setting the LEDS to off before starting program
+	PORTC=0b00000011;  //Wired as a sink so 1=off and 0=on
+	
+	// ============================================
+	// P R O G R A M L O O P
+	// ============================================
+	
+	while(1){
+		if(PIND==0b00000000){    //Check to see if the switch has been pressed. If not this repeats
+			//if pin 2 is zero(Low voltage state) then that means it has been pressed and the sequence can start
+			
+			while(1){    //If the switch is pressed it will enter this infinite while loop so that the light up sequence continues indefinitely
+				
+				//Beginning the light sequence
+				SequenceA();                        //The light will turn on/off depending on the function
+				SwitchCheck();						//The switch will be checked every time a sequence finishes
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceB();
+				SwitchCheck();
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceA();
+				SwitchCheck();
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceA();
+				SwitchCheck();
+				
+				SequenceD();
+				SwitchCheck();
+				
+				SequenceA();
+				SwitchCheck();
+				
+				SequenceD();
+				SwitchCheck();
+				
+				SequenceB();
+				SwitchCheck();
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceB();
+				SwitchCheck();
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceA();
+				SwitchCheck();
+				
+				SequenceD();
+				SwitchCheck();
+				
+				SequenceB();
+				SwitchCheck();
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceB();
+				SwitchCheck();
+				
+				SequenceC();
+				SwitchCheck();
+				
+				SequenceB();
+				SwitchCheck();
+				
+				//Once the last part of the sequence is completed the lights will stay off for 2 seconds
+				PORTC=0b00000011;
+				wait(2000);
+				SwitchCheck();
+				
+			} //End of the inner infinite while loop after hitting the button
+		}	//If the switch is never pressed the while loop repeats until it does
+	}
+}//End of main function
+
+
+/*====================================================================
+// W A I T F U N C T I O N-Used with Permission from Dr. William Clark
+//==================================================================== */
+
+void wait(volatile int number_of_msec) {
+// This subroutine creates a delay equal to number_of_msec*T, where T is 1 msec
+// It changes depending on the frequency defined by FREQ_CLK
+char register_B_setting;
+char count_limit;
+
+// Some typical clock frequencies:
+switch(FREQ_CLK) {
+case 16000000:
+register_B_setting = 0b00000011; // this will start the timer in Normal mode with prescaler of 64 (CS02 = 0, CS01 = CS00 = 1).
+count_limit = 250; // For prescaler of 64, a count of 250 will require 1 msec
+break;
+case 8000000:
+register_B_setting =  0b00000011; // this will start the timer in Normal mode with prescaler of 64 (CS02 = 0, CS01 = CS00 = 1).
+count_limit = 125; // for prescaler of 64, a count of 125 will require 1 msec
+break;
+case 1000000:
+register_B_setting = 0b00000010; // this will start the timer in Normal mode with prescaler of 8 (CS02 = 0, CS01 = 1, CS00 = 0).
+count_limit = 125; // for prescaler of 8, a count of 125 will require 1 msec
+break;
+}
+
+while (number_of_msec > 0) {
+TCCR0A = 0x00; // clears WGM00 and WGM01 (bits 0 and 1) to ensure Timer/Counter is in normal mode.
+TCNT0 = 0;  // preload value for testing on count = 250
+TCCR0B =  register_B_setting;  // Start TIMER0 with the settings defined above
+while (TCNT0 < count_limit); // exits when count = the required limit for a 1 msec delay
+TCCR0B = 0x00; // Stop TIMER0
+number_of_msec--;
+}
+} // end wait()
+
+
+/*=================================
+//S E Q U E N C E A F U N C T I O N
+//=================================*/
+
+void SequenceA(){
+PORTC=0b00000000;      //Turning the LEDs on
+wait(200);             //Waiting for 200 msec
+}		//End of Sequence A
+
+
+/*=================================
+//S E Q U E N C E B F U N C T I O N
+//=================================*/
+
+void SequenceB(){
+PORTC=0b00000000;      //Turning the LEDs on
+wait(600);             //Keep them on for 600 msec
+}		//End of Sequence B
+
+
+/*=================================
+//S E Q U E N C E C F U N C T I O N
+//=================================*/
+
+void SequenceC(){
+PORTC=0b00000011;      //Turning the LEDs off
+wait(200);             //Use to keep LED off for 200 msec
+}		//End of Sequence C
+
+
+/*=================================
+//S E Q U E N C E D F U N C T I O N
+//=================================*/
+
+void SequenceD(){
+PORTC=0b00000011;      //Turning the LEDs off
+wait(600);            //Using this to turn the light off for 600 msec
+}		//End of Sequence D
+
+
+/*=================================
+//S W I T C H C H E C K
+//=================================*/
+
+void SwitchCheck(){
+	while(!(PIND & 0b00000100)){}  //Logic keeps the light paused at whatever state and doesn't change until switch is released
+}
